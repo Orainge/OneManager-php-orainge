@@ -2,6 +2,7 @@
 
 global $exts;
 global $constStr;
+global $constParams;
 
 $exts['img'] = ['ico', 'bmp', 'gif', 'jpg', 'jpeg', 'jpe', 'jfif', 'tif', 'tiff', 'png', 'heic', 'webp'];
 $exts['music'] = ['mp3', 'wma', 'flac', 'ape', 'wav', 'ogg', 'm4a'];
@@ -9,6 +10,8 @@ $exts['office'] = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
 $exts['txt'] = ['txt', 'log', 'bat', 'sh', 'php', 'asp', 'js', 'css', 'json', 'html', 'c', 'cpp', 'md', 'py', 'omf'];
 $exts['video'] = ['mp4', 'webm', 'mkv', 'mov', 'flv', 'blv', 'avi', 'wmv', 'm3u8', 'rm', '3gp', 'rmvb'];
 $exts['zip'] = ['zip', 'rar', '7z', 'gz', 'tar'];
+
+$constParams = ['loginPageParam' => 'toLogin'];
 
 $constStr = [
     'languages' => [
@@ -88,7 +91,8 @@ $constStr = [
     'EnvironmentsDescription' => [
         'en-us' => [
             'admin' => 'The admin password, Login button will not show when empty',
-            'adminloginpage' => 'if set, the Login button will not display, and the login page no longer \'?login=admin\', it is \'?login={this value}\'.',
+            'adminloginpage' => 'if set, the Login button will not display, and the login page no longer \'?' . $constParams['loginPageParam'] . '=admin\', it is \'?' . $constParams['loginPageParam'] . '={this value}\'.',
+            'guestuploadtoken' => 'The Token of the image bed upload interface. After setting, the request interface needs to fill in {auth: the value of this setting} in the header. If no value is set here, everyone can upload.',
             'autoJumpFirstDisk' => 'a switch used in multy disks, if 1, auto jump to first disk',
             'customScript' => '<script> in all pages, e.g. http turn to https',
             'customCss' => '<style> in <head>',
@@ -122,7 +126,8 @@ $constStr = [
         ],
         'zh-cn' => [
             'admin' => '管理密码，不添加时不显示登录页面且无法登录。',
-            'adminloginpage' => '如果设置，登录按钮及页面隐藏。管理登录的页面不再是\'?login=admin\'，而是\'?login=此设置的值\'。',
+            'adminloginpage' => '如果设置，登录按钮及页面隐藏。管理登录的页面不再是\'?' . $constParams['loginPageParam'] . '=admin\'，而是\'?' . $constParams['loginPageParam'] . '=此设置的值\'。',
+            'guestuploadtoken' => '图床上传接口的 Token，设置后请求接口需要在 header 中填入 {auth: 此设置的值}，此处不设置值表示所有人都可以上传。',
             'autoJumpFirstDisk' => '一个开关，用于多个磁盘，如果为1，则自动跳转到第一个磁盘',
             'customScript' => '<script>，在所有页都会存在,例如放一个http跳转https',
             'customCss' => '<style>，在<head>最后面',
@@ -156,7 +161,8 @@ $constStr = [
         ],
         'zh-tw' => [
             'admin' => '管理密碼，不設定密碼將不顯示登入頁面且無法登入。',
-            'adminloginpage' => '如果設定，登入按鈕及頁面隱藏。管理登入的頁面不再是\'?login=admin\'，而是\'?login=此設置的值\'。',
+            'adminloginpage' => '如果設定，登入按鈕及頁面隱藏。管理登入的頁面不再是\'?' . $constParams['loginPageParam'] . '=admin\'，而是\'?' . $constParams['loginPageParam'] . '=此設置的值\'。',
+            'guestuploadtoken' => '圖床上傳接口的 Token，設置後請求接口需要在 header 中填入 {auth: 此設置的值}，此處不設置值表示所有人都可以上傳。',
             'autoJumpFirstDisk' => '用於多盤，如果設1，將會自動跳到第一個盤。',
             'customScript' => '<script>，在所有頁都會存在,例如放一個http跳轉https',
             'customCss' => '<style>，在<head>最後面',
@@ -181,7 +187,8 @@ $constStr = [
         ],
         'ja' => [
             'admin' => 'パスワードを管理する、追加しない場合、ログインページは表示されず、ログインできません。',
-            'adminloginpage' => '設定すると、ログインボタンとページが非表示になります。ログインを管理するためのページは\'?login=admin \'ではなく、\'?login=この設定の値\'。',
+            'adminloginpage' => '設定すると、ログインボタンとページが非表示になります。ログインを管理するためのページは\'?' . $constParams['loginPageParam'] . '=admin \'ではなく、\'?' . $constParams['loginPageParam'] .'=この設定の値\'。',
+            'guestuploadtoken' => 'イメージ ベッド アップロード インターフェイスのトークン. 設定後, リクエスト インターフェイスはヘッダーに {auth: この設定の値"} を入力する必要があります. ここに値が設定されていない場合, 誰でもアップロードできます.',
             'autoJumpFirstDisk' => '複数のディスクを使って、1を設定すると、自動的に最初のディスクにジャンプします。',
             'customScript' => '＜script＞は、すべてのページに存在します。例えば、httpを置いてhttpsをジャンプします。',
             'customCss' => '＜style＞は、＜head＞の一番後ろにあります。',
@@ -206,7 +213,8 @@ $constStr = [
         ],
         'ko-kr' => [
             'admin' => '비밀번호를 관리하고 로그인 페이지를 표시하지 않으며 추가하지 않으면 로그인 할 수 없습니다.',
-            'adminloginpage' => '설정하면 로그인 버튼과 페이지가 숨겨집니다. 로그인 관리 페이지는 더 이상 \ ?login=admin\'이 아니라 \ ?login=이 설정의 값 \'입니다.',
+            'adminloginpage' => '설정하면 로그인 버튼과 페이지가 숨겨집니다. 로그인 관리 페이지는 더 이상 \ ?' . $constParams['loginPageParam'] . '=admin\'이 아니라 \ ?' . $constParams['loginPageParam'] . '=이 설정의 값 \'입니다.',
+            'guestuploadtoken' => '이미지 베드 업로드 인터페이스의 토큰 설정 후 요청 인터페이스는 헤더에 {auth: 이 설정의 값}을 채워야 합니다. 여기에 값을 설정하지 않으면 모든 사람이 업로드할 수 있습니다.',
             'autoJumpFirstDisk' => '여러 개의 디스크 에 사용 되 며, 1 이 되면 첫 번 째 디스크 로 자동 으로 이동 합 니 다.',
             'customScript' => '< script > 은 모든 페이지 에 존재 합 니 다. 예 를 들 어 http 을 하나 넣 고 https 로 이동 합 니 다.',
             'customCss' => '< 스타일 >, < 헤드 > 맨 뒤에',
@@ -231,7 +239,8 @@ $constStr = [
         ],
         'fa' => [
             'admin' => 'رمز عبور ادمین، در صورت خالی بودن دکمه لاگین به نمایش در نمی‌آید',
-            'adminloginpage' => 'در صورت تنظیم ، دکمه ورود نمایش داده نمی شود و صفحه ورود دیگر \?login=admin\ نیست بلکه \?login={مقدار ورودی شما}\ است.',
+            'guestuploadtoken' => '',
+            'adminloginpage' => 'در صورت تنظیم ، دکمه ورود نمایش داده نمی شود و صفحه ورود دیگر \?' . $constParams['loginPageParam'] . '=admin\ نیست بلکه \?' . $constParams['loginPageParam'] . '={مقدار ورودی شما}\ است.',
             'referrer' => '',
             'domain_path' => 'تنظیم دامنه سفارشی، به صورت a1.com:/dirto/path1|b2.com:/path2',
             'diskname' => 'نام دیسک که می‌خواهید نشان دهید.',
@@ -245,6 +254,7 @@ $constStr = [
         ],
         'ar-sa' => [
             'admin' => ' إدارة كلمة السر ، لا يمكنك عرض صفحة تسجيل الدخول دون إضافة',
+            'guestuploadtoken' => '',
             'adminloginpage' => 'إذا كان الإعداد ، زر تسجيل الدخول و الصفحة المخفية   إدارة صفحة تسجيل الدخول لم تعد قيمة هذا الإعداد ؟',
             'autoJumpFirstDisk' => 'على أقراص متعددة ، إذا كان واحد ، ثم الانتقال تلقائيا إلى القرص الأول',
             'customScript' => 'في جميع الصفحات ، على سبيل المثال ، وضع النص المتشعب القفز HTTPS',
@@ -368,6 +378,11 @@ $constStr = [
         'fa' => 'نصب',
         'ar-sa' => 'إعداد',
     ],
+    'SystemUpgrade' => [
+        'en-us' => 'System Upgrade',
+        'zh-cn' => '系统升级',
+        'zh-tw' => '系統升級',
+    ],
     'Back' => [
         'en-us' => 'Back',
         'zh-cn' => '返回',
@@ -396,18 +411,18 @@ $constStr = [
         'ar-sa' => 'لا تحتاج إلى تحديث',
     ],
     'PlatformConfig' => [
-        'en-us' => 'Platform Config',
-        'zh-cn' => '平台变量',
-        'zh-tw' => '平台變數',
+        'en-us' => 'System Config',
+        'zh-cn' => '系统变量',
+        'zh-tw' => '系统變數',
         'ja' => 'プラットフォーム変数',
         'ko-kr' => '플랫폼 변수',
         'fa' => 'پیکربندی پلتفرم',
         'ar-sa' => 'منصة متغير',
     ],
     'DragSort' => [
-        'en-us' => 'Drag to Sort Disk',
-        'zh-cn' => '拖拽改变顺序',
-        'zh-tw' => '拖曳改變順序',
+        'en-us' => 'Drag and drop cloud disk names to change the order',
+        'zh-cn' => '拖拽云盘名称来改变顺序',
+        'zh-tw' => '拖拽雲盤名稱以便改變順序',
     ],
     'SubmitSortdisks' => [
         'en-us' => 'Submit Sort',
@@ -437,10 +452,15 @@ $constStr = [
         'en-us' => 'Change',
         'zh-cn' => '切换',
     ],
+    'ModifyDiskOrder' => [
+        'en-us' => 'Modify The Order of Cloud Disks',
+        'zh-cn' => '修改云盘顺序',
+        'zh-tw' => '修改雲盤順序',
+    ],
     'AddDisk' => [
-        'en-us' => 'Add Disk',
-        'zh-cn' => '添加盘',
-        'zh-tw' => '新增盤',
+        'en-us' => 'Add Cloud Disk',
+        'zh-cn' => '添加云盘',
+        'zh-tw' => '新增雲盤',
         'ja' => 'を追加',
         'ko-kr' => '추가',
         'fa' => 'اضافه کردن دیسک ',
@@ -1163,19 +1183,24 @@ $constStr = [
         'zh-tw' => '新密碼',
     ],
     'ReInput' => [
-        'en-us' => 'ReInput',
-        'zh-cn' => '再输入一次',
-        'zh-tw' => '再输入一次',
+        'en-us' => 'Confirm Password',
+        'zh-cn' => '确认密码',
+        'zh-tw' => '確認密碼',
     ],
     'ChangAdminPassword' => [
         'en-us' => 'Chang Admin Password',
         'zh-cn' => '修改管理密码',
         'zh-tw' => '修改管理密碼',
     ],
+    'Confirm' => [
+        'en-us' => 'OK',
+        'zh-cn' => '确定',
+        'zh-tw' => '確定',
+    ],
     'AdminPassword' => [
-        'en-us' => 'Admin Password',
-        'zh-cn' => '管理密码',
-        'zh-tw' => '管理密碼',
+        'en-us' => 'Please Enter the Admin Password',
+        'zh-cn' => '请输入管理密码',
+        'zh-tw' => '請輸入管理密碼',
     ],
     'export' => [
         'en-us' => 'export',
@@ -1183,14 +1208,19 @@ $constStr = [
         'zh-tw' => '导出',
     ],
     'config' => [
-        'en-us' => 'config',
-        'zh-cn' => '配置',
-        'zh-tw' => '配置',
+        'en-us' => 'System Config',
+        'zh-cn' => '系统配置',
+        'zh-tw' => '系統配置',
     ],
     'import' => [
         'en-us' => 'import',
         'zh-cn' => '导入',
         'zh-tw' => '导入',
+    ],
+    'InputOutputConfig' => [
+        'en-us' => 'Input/Output Config',
+        'zh-cn' => '导入/导出配置',
+        'zh-tw' => '導入/導出配置',
     ],
     'ONEMANAGER_CONFIG_SAVE_ENV' => [
         'en-us' => 'Config save in Environments',

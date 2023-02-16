@@ -21,6 +21,7 @@ $EnvConfigs = [
     'HerokuappId'       => 0b0000, // used in heroku.
 
     'admin'             => 0b0000,
+    'guestuploadtoken'  => 0b0010,
     'adminloginpage'    => 0b0010,
     'autoJumpFirstDisk' => 0b1010,
     'background'        => 0b0011,
@@ -145,6 +146,7 @@ function main($path)
     global $constStr;
     global $slash;
     global $drive;
+    global $constParams;
 
     $slash = '/';
     if (strpos(__DIR__, ':')) $slash = '\\';
@@ -211,8 +213,9 @@ function main($path)
     } else {
         $adminloginpage = getConfig('adminloginpage');
     }
-    if (isset($_GET['login'])) {
-        if ($_GET['login']===$adminloginpage) {
+    $loginPageParamName=$constParams['loginPageParam']; // 自定义登录页参数
+    if (isset($_GET[$loginPageParamName])) {
+        if ($_GET[$loginPageParamName]===$adminloginpage) {
             /*if (isset($_GET['preview'])) {
                 $url = $_SERVER['PHP_SELF'] . '?preview';
             } else {
@@ -336,6 +339,14 @@ function main($path)
         }
         
         if ($_GET['action']=='upbigfile') {
+            $totpToken=getConfig('guestuploadtoken');
+            if(!$_SERVER['admin'] && ($totpToken != '' || $totpToken != null)){
+                // 检查 TOKEN
+                $requestAuth=$_SERVER['HTTP_AUTH'];
+                if($requestAuth != $totpToken){
+                    return output('Not_Authorized', 403);
+                }
+            }
             if (!driveisfine($_SERVER['disktag'], $drive)) return output($_SERVER['disktag']?'disk [ ' . $_SERVER['disktag'] . ' ] error.':'Not in drive', 403);
             if (!$_SERVER['admin']) {
                 if (!$_SERVER['is_guestup_path']) return output('Not_Guest_Upload_Folder', 400);
@@ -346,6 +357,14 @@ function main($path)
         }
     }
     if ($_GET['action']=='upsmallfile') {
+        $totpToken=getConfig('guestuploadtoken');
+        if(!$_SERVER['admin'] && ($totpToken != '' || $totpToken != null)){
+            // 检查 TOKEN
+            $requestAuth=$_SERVER['HTTP_AUTH'];
+            if($requestAuth != $totpToken){
+                return output('Not_Authorized', 403);
+            }
+        }
         //echo json_encode($_POST, JSON_PRETTY_PRINT);
         //echo json_encode($_FILES, JSON_PRETTY_PRINT);
         if (!driveisfine($_SERVER['disktag'], $drive)) return output($_SERVER['disktag']?'disk [ ' . $_SERVER['disktag'] . ' ] error.':'Not in drive', 403);
@@ -1023,10 +1042,15 @@ function message($message, $title = 'Message', $statusCode = 200, $wainstat = 0)
         <a href="' . $_SERVER['base_path'] . '">' . getconstStr('Back') . getconstStr('Home') . '</a>
         <h1>' . $title . '</h1>
         <div id="dis" style="display: none;">
+';
 
-' . $message . '
+    // 如果错误提示标题里不同时包含 'Not'/'not' 和 'Found'/'found'
+    if(!(str_contains(strtolower($title), 'not') && str_contains(strtolower($title), 'found'))){
+        $html .= $message;
+    }
 
-        </div>';
+    $html .= '
+    </div>';
     if ($wainstat) {
         $html .= '
         <div id="err"></div>
@@ -1237,7 +1261,7 @@ function adminform($name = '', $pass = '', $storage = '', $path = '')
         xhr.send(null);
     }
 </script>
-<script src="https://www.unpkg.com/js-sha1@0.6.0/src/sha1.js"></script>';
+<script src="https://cdn.jsdelivr.net/npm/js-sha1@0.6.0/src/sha1.js"></script>';
     $html .= '</html>';
     return output($html, $statusCode);
 }
@@ -1409,7 +1433,13 @@ function EnvOpt($needUpdate = 0)
 
     $html = '<title>OneManager '.getconstStr('Setup').'</title>';
     if (isset($_POST['updateProgram'])&&$_POST['updateProgram']==getconstStr('updateProgram')) if (compareadminmd5('admin', getConfig('admin'), $_COOKIE['admin'], $_POST['_admin'])) {
-        $response = setConfigResponse(OnekeyUpate($_POST['GitSource'], $_POST['auth'], $_POST['project'], $_POST['branch']));
+        $gitSource=$_POST['GitSource'];
+
+        if(strcmp($gitSource,"Orainge Github")==0){
+            $gitSource='Github';
+        }
+
+        $response = setConfigResponse(OnekeyUpate($gitSource, $_POST['auth'], $_POST['project'], $_POST['branch']));
         if (api_error($response)) {
             $html = api_error_msg($response);
             $title = 'Error';
@@ -1789,7 +1819,7 @@ output:
     } else {
         if (count($disktags)>1) {
             $frame .= '
-<script src="https://www.unpkg.com/sortablejs@1.14.0/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
 <style>
     .sortable-ghost {
         opacity: 0.4;
@@ -1800,7 +1830,9 @@ output:
         cursor: move;
     }
 </style>
-' . getconstStr('DragSort') . ':
+<div style="width: 500px; padding: 10px; border-width: 1px; border-color: #2e2e3c; border-style: dashed; margin-bottom: 20px;">
+<p style="font-weight: bold;">' . getconstStr('ModifyDiskOrder') . '</p>
+<p>' . getconstStr('DragSort') . '</p>
 <form id="sortdisks_form" action="" method="post" style="margin: 0" onsubmit="return dragsort(this);">
 <table border=1>
     <tbody id="sortdisks">
@@ -1817,9 +1849,11 @@ output:
     </tbody>
     <input name="_admin" type="hidden" value="">
 </table>
-    <input type="submit" name="submit1" value="' . getconstStr('SubmitSortdisks') . '">
+    <div style="margin-top: 10px;">
+        <input type="submit" name="submit1" value="' . getconstStr('SubmitSortdisks') . '">
+    </div>
 </form>
-
+</div>
 <script>
     var disks=' . json_encode($disktags) . ';
     function change(arr, oldindex, newindex) {
@@ -1864,10 +1898,12 @@ output:
             }
         }
     });
-</script><br>';
+</script>';
         }
         $Driver_arr = scandir(__DIR__ . $slash . 'disk');
         $frame .= '
+<div style="width: 500px; padding: 10px; border-width: 1px; border-color: #2e2e3c; border-style: dashed; margin-bottom: 20px;">
+<p style="font-weight: bold;">' . getconstStr('AddDisk') . '</p>
 <select name="DriveType" onchange="changedrivetype(this.options[this.options.selectedIndex].value)">';
         foreach ($Driver_arr as $v1) {
             if ($v1!='.' && $v1!='..') {
@@ -1879,7 +1915,10 @@ output:
         }
         $frame .= '
 </select>
-<a id="AddDisk_link" href="?AddDisk=Onedrive">' . getconstStr('AddDisk') . '</a><br><br>
+<div style="margin-top: 10px">
+<a style="id="AddDisk_link" href="?AddDisk=Onedrive">' . getconstStr('Confirm') . '</a>
+</div>
+</div>
 <script>
     function changedrivetype(d) {
         document.getElementById(\'AddDisk_link\').href="?AddDisk=" + d;
@@ -1906,40 +1945,65 @@ output:
                 $canOneKeyUpate = 1;
             }
         }
+
         $frame .= '
-        <a href="https://github.com/qkqpttgf/OneManager-php" target="_blank">Github</a>
-<a href="https://git.hit.edu.cn/ysun/OneManager-php" target="_blank">HIT Gitlab</a><br><br>
+        <div style="width: 500px; padding: 10px; border-width: 1px; border-color: #2e2e3c; border-style: dashed">
+            <p style="font-weight: bold">' . getconstStr('SystemUpgrade') . '</p>
+            <p>Version: Modify by Orainge</p>
+            <p>可选版本：<br>
+                <ul>
+                    <li><a href="https://github.com/Orainge/OneManager-php-orainge" target="_blank">Orainge Github: Orainge/OneManager-php-orainge</a></li>
+                    <li><a href="https://github.com/qkqpttgf/OneManager-php" target="_blank">Github: qkqpttgf/OneManager-php</a></li>
+                    <li><a href="https://git.hit.edu.cn/ysun/OneManager-php" target="_blank">HIT Gitlab: ysun/OneManager-php</a></li>
+                </ul>
+            </p>
 ';
         if (!$canOneKeyUpate) {
             $frame .= '
 ' . getconstStr('CannotOneKeyUpate') . '<br>';
         } else {
+//    官方分支
+//    <input type="text" name="auth" size="6" placeholder="auth" value="qkqpttgf">
+//    <input type="text" name="project" size="12" placeholder="project" value="OneManager-php">
             $frame .= '
 <form name="updateform" action="" method="post">
     <input name="_admin" type="hidden" value="">
-    Update from
-    <select name="GitSource" onchange="changeGitSource(this)">
-        <option value="Github" selected>Github</option>
+    <select name="GitSource" onchange="changeGitSource(this)" style="width: 130px">
+        <option value="Orainge Github" selected>Orainge Github</option>
+        <option value="Github">Github</option>
         <option value="HITGitlab">HIT Gitlab</option>
     </select>
-    <input type="text" name="auth" size="6" placeholder="auth" value="qkqpttgf">
-    <input type="text" name="project" size="12" placeholder="project" value="OneManager-php">
-    <button name="QueryBranchs" onclick="querybranchs(this);return false;">' . getconstStr('QueryBranchs') . '</button>
+    <input type="text" name="auth" size="11" placeholder="auth" value="Orainge">
+    <input type="text" name="project" size="24" placeholder="project" value="OneManager-php-orainge">
+    <p></p>
     <select name="branch">
         <option value="master">master</option>
     </select>
+    <button name="QueryBranchs" onclick="querybranchs(this);return false;">' . getconstStr('QueryBranchs') . '</button>
+    <p></p>
     <input type="submit" name="updateProgram" value="' . getconstStr('updateProgram') . '">
 </form>
 
 <script>
     function changeGitSource(d) {
-        if (d.options[d.options.selectedIndex].value=="Github") document.updateform.auth.value = "qkqpttgf";
-        if (d.options[d.options.selectedIndex].value=="HITGitlab") document.updateform.auth.value = "ysun";
+        if (d.options[d.options.selectedIndex].value=="Orainge Github"){
+            document.updateform.auth.value = "Orainge";
+            document.updateform.project.value = "OneManager-php-orainge";
+        }
+        if (d.options[d.options.selectedIndex].value=="Github"){
+            document.updateform.auth.value = "qkqpttgf";
+            document.updateform.project.value = "OneManager-php";
+        }
+        if (d.options[d.options.selectedIndex].value=="HITGitlab"){
+            document.updateform.auth.value = "ysun";
+            document.updateform.project.value = "OneManager-php";
+        }
         document.updateform.QueryBranchs.style.display = null;
         document.updateform.branch.options.length = 0;
         document.updateform.branch.options.add(new Option("master", "master"));
     }
     function querybranchs(b) {
+        if (document.updateform.GitSource.options[document.updateform.GitSource.options.selectedIndex].value=="Orainge Github") return Githubquerybranchs(b);
         if (document.updateform.GitSource.options[document.updateform.GitSource.options.selectedIndex].value=="Github") return Githubquerybranchs(b);
         if (document.updateform.GitSource.options[document.updateform.GitSource.options.selectedIndex].value=="HITGitlab") return HITquerybranchs(b);
     }
@@ -2011,6 +2075,8 @@ output:
 </script>
 ';
         }
+        $frame .= '</div>';
+
         if ($needUpdate) {
             $frame .= '<div style="position: relative; word-wrap: break-word;">
         ' . str_replace("\n", '<br>', $_SERVER['github_ver_new']) . '
@@ -2022,38 +2088,50 @@ output:
         }/* else {
             $frame .= getconstStr('NotNeedUpdate');
         }*/
-        $frame .= '<br><br>
-<script src="https://www.unpkg.com/js-sha1@0.6.0/src/sha1.js"></script>
-<table>
-    <form id="change_pass" name="change_pass" action="" method="POST" onsubmit="return changePassword(this);">
-        <input name="_admin" type="hidden" value="">
-    <tr>
-        <td>' . getconstStr('OldPassword') . ':</td><td><input type="password" name="oldPass">
-        <input type="hidden" name="timestamp"></td>
-    </tr>
-    <tr>
-        <td>' . getconstStr('NewPassword') . ':</td><td><input type="password" name="newPass1"></td>
-    </tr>
-    <tr>
-        <td>' . getconstStr('ReInput') . ':</td><td><input type="password" name="newPass2"></td>
-    </tr>
-    <tr>
-        <td></td><td><button name="changePass" value="changePass">' . getconstStr('ChangAdminPassword') . '</button></td>
-    </tr>
-    </form>
-</table><br>
-<table>
-    <form id="config_f" name="config" action="" method="POST" onsubmit="return false;">
-    <tr>
-        <td>' . getconstStr('AdminPassword') . ':<input type="password" name="pass">
-        <button name="config_b" value="export" onclick="exportConfig(this);">' . getconstStr('export') . '</button></td>
-    </tr>
-    <tr>
-        <td>' . getconstStr('config') . ':<textarea name="config_t"></textarea>
-        <button name="config_b" value="import" onclick="importConfig(this);">' . getconstStr('import') . '</button></td>
-    </tr>
-    </form>
-</table><br>
+        $frame .= '
+<script src="https://cdn.jsdelivr.net/npm/js-sha1@0.6.0/src/sha1.js"></script>
+<div style="width: 500px; padding: 10px; border-width: 1px; border-color: #2e2e3c; border-style: dashed; margin: 20px 0;">
+    <p style="font-weight: bold">' . getconstStr('ChangAdminPassword') . '</p>
+    <table>
+        <form id="change_pass" name="change_pass" action="" method="POST" onsubmit="return changePassword(this);">
+            <input name="_admin" type="hidden" value="">
+        <tr>
+            <td>' . getconstStr('OldPassword') . '</td><td><input type="password" name="oldPass">
+            <input type="hidden" name="timestamp"></td>
+        </tr>
+        <tr>
+            <td>' . getconstStr('NewPassword') . '</td><td><input type="password" name="newPass1"></td>
+        </tr>
+        <tr>
+            <td>' . getconstStr('ReInput') . '</td><td><input type="password" name="newPass2"></td>
+        </tr>
+        <tr>
+            <td><button style="margin-top: 10px;" name="changePass" value="changePass">' . getconstStr('Confirm') . '</button></td>
+        </tr>
+        </form>
+    </table>
+</div>
+<div style="width: 500px; padding: 10px; border-width: 1px; border-color: #2e2e3c; border-style: dashed; margin: 20px 0;">
+    <p style="font-weight: bold">' . getconstStr('InputOutputConfig') . '</p>
+    <table>
+        <form id="config_f" name="config" action="" method="POST" onsubmit="return false;">
+        <tr>
+            <td>
+                ' . getconstStr('AdminPassword') . '<br><input type="password" name="pass"><br>
+                <div style="margin: 5px 0;">
+                    <button name="config_b" value="export" onclick="exportConfig(this);">' . getconstStr('export') . '</button>
+                    <button name="config_b" value="import" onclick="importConfig(this);">' . getconstStr('import') . '</button>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                ' . getconstStr('config') . '<br><textarea style="max-width: 400px;" name="config_t"></textarea>
+            </td>
+        </tr>
+        </form>
+    </table>
+</div>
 <script>
     var config_f = document.getElementById("config_f");
     function exportConfig(b) {
@@ -2264,12 +2342,13 @@ function render_list($path = '', $files = [])
     //$pretitle = str_replace('%23','#',$pretitle);
     $statusCode = 200;
     date_default_timezone_set(get_timezone($_SERVER['timezone']));
-    $authinfo = '
-<!--
-    OneManager: An index & manager of Onedrive auth by ysun.
-    HIT Gitlab: https://git.hit.edu.cn/ysun/OneManager-php
-    Github: https://github.com/qkqpttgf/OneManager-php
--->';
+    $authinfo = '';
+//     $authinfo = '
+// <!--
+//     OneManager: An index & manager of Onedrive auth by ysun.
+//     HIT Gitlab: https://git.hit.edu.cn/ysun/OneManager-php
+//     Github: https://github.com/qkqpttgf/OneManager-php
+// -->';
     //$authinfo = $path . '<br><pre>' . json_encode($files, JSON_PRETTY_PRINT) . '</pre>';
 
     //if (isset($_COOKIE['theme'])&&$_COOKIE['theme']!='') $theme = $_COOKIE['theme'];
