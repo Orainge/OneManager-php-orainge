@@ -20,6 +20,18 @@
 <!--ListEnd-->
         </table>
         <hr>
-        <div> Copyright(c) 2021-2023 <a href="https://easonhuang.net">Eason Huang</a> All Rights Reserved.</div>
+        <div>
+            <div style="float: left">
+                Copyright(c) 2020-<span id="thisYear"></span>
+            </div>
+            <div style="margin:0 10px; float: left">
+                <a href="https://easonhuang.net">Eason Huang</a>
+            </div>
+            All Rights Reserved.
+        </div>
     </body>
+    <script>
+        var date = new Date();
+        document.getElementById("thisYear").innerText=date.getFullYear();
+    </script>
 </html>
